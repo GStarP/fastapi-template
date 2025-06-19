@@ -4,7 +4,12 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from app.infra import log, request_id
+from app.infra.settings import settings
 from app.shared import rest, error
+
+from tortoise.contrib.fastapi import register_tortoise
+
+import contextlib
 
 
 ###
@@ -13,7 +18,32 @@ from app.shared import rest, error
 log.init_logging()
 
 logger = logging.getLogger(__name__)
-app = FastAPI()
+
+
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
+# ORM
+register_tortoise(
+    app=app,
+    config={
+        "connections": {"default": settings.DB_URL},
+        "apps": {
+            "models": {
+                "models": ["app.features.user.models"],
+                "default_connection": "default",
+            }
+        },
+        "use_tz": True,
+        "timezone": "Asia/Shanghai",
+    },
+    generate_schemas=True,
+    add_exception_handlers=True,
+)
 
 
 ###
@@ -53,3 +83,8 @@ async def custom_exception_handler(_, exc: Exception):
 async def r_ping():
     logger.info("ping")
     return rest.ok_ret("pong")
+
+
+from app.features.user import routes
+
+app.include_router(router=routes.router_user)
