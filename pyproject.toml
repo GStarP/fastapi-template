@@ -1,0 +1,18 @@
+[project]
+name = "fastapi-template"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.13",
+    "python-dotenv>=1.1.0",
+]
+
+[dependency-groups]
+dev = ["black>=25.1.0", "pytest>=8.3.5", "pytest-asyncio>=1.0.0"]
+
+[[tool.uv.index]]
+name = 'ali'
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
