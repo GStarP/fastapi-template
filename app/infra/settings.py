@@ -1,7 +1,7 @@
 import os
-from dotenv import load_dotenv
 from dataclasses import dataclass, fields
 
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -12,12 +12,15 @@ def prefix(s: str) -> str:
 
 @dataclass
 class Settings:
+    SERVICE_NAME: str = "fastapi-template"
     DEBUG: bool = False
     LOG_PATH: str = "./logs"
     LOG_LEVEL: str = "INFO"
 
     DB_URL: str = ""
     REDIS_URL: str = ""
+
+    OTLP_URL: str = ""
 
     def __post_init__(self):
         for k in fields(self):

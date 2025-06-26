@@ -21,6 +21,10 @@ def init_logging():
     root_logger.setLevel(settings.LOG_LEVEL)
     root_logger.handlers.clear()
 
+    default_formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(process)d:%(threadName)s:%(thread)d - %(pathname)s:%(lineno)s - req:%(request_id)s - %(message)s"
+    )
+
     file_handler = logging.handlers.TimedRotatingFileHandler(
         str(log_dir / "app.log"),
         when="midnight",
@@ -30,10 +34,8 @@ def init_logging():
     )
     file_handler.suffix = "%Y-%m-%d.log"
     file_handler.setLevel(settings.LOG_LEVEL)
-    file_formatter = logging.Formatter(
-        "%(asctime)s|%(levelname)s|%(request_id)s|%(name)s|%(message)s"
-    )
-    file_handler.setFormatter(file_formatter)
+
+    file_handler.setFormatter(default_formatter)
     file_handler.addFilter(RequestIDFilter())
     root_logger.addHandler(file_handler)
 
@@ -41,9 +43,6 @@ def init_logging():
     if settings.DEBUG:
         console_handler = logging.StreamHandler()
         console_handler.setLevel(settings.LOG_LEVEL)
-        console_formatter = logging.Formatter(
-            "%(asctime)s|%(name)s|%(levelname)s|%(request_id)s|%(message)s"
-        )
-        console_handler.setFormatter(console_formatter)
+        console_handler.setFormatter(default_formatter)
         console_handler.addFilter(RequestIDFilter())
         root_logger.addHandler(console_handler)
