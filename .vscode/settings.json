@@ -1,3 +1,9 @@
 {
-  "cSpell.words": ["dotenv", "fastapi", "Instrumentor", "uvicorn"]
+  "cSpell.words": [
+    "dotenv",
+    "fastapi",
+    "Instrumentor",
+    "tortoiseorm",
+    "uvicorn"
+  ]
 }

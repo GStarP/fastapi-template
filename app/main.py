@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.features.user import router as user_router
 from app.infra import log, observable, orm, request_id
+from app.infra.redis import redis, redis_prefix
 from app.shared import error, rest
 
 app = FastAPI()
@@ -67,6 +68,12 @@ async def r_ping():
 async def r_err():
     v = 1 / 0
     return rest.ok_ret("err")
+
+
+@api_router.get("/redis")
+async def r_redis():
+    v = await redis.incr(redis_prefix("count"))
+    return rest.ok_ret(v)
 
 
 api_router.include_router(router=user_router.router)

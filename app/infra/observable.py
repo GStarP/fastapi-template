@@ -8,6 +8,7 @@ from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
 )
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.tortoiseorm import TortoiseORMInstrumentor
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
@@ -31,6 +32,9 @@ def init_observable(app: FastAPI):
 
     # 自动 trace 数据库操作
     TortoiseORMInstrumentor().instrument()
+
+    # 自动 trace redis 操作
+    RedisInstrumentor().instrument()
 
     # 自动 log
     logger_provider = LoggerProvider(resource=resource)
