@@ -30,7 +30,6 @@ def init_observable(app: FastAPI):
     FastAPIInstrumentor.instrument_app(app=app, excluded_urls="^(?!.*/api/).*")
 
     # 自动 trace 数据库操作
-    # TODO 并未完美适配
     TortoiseORMInstrumentor().instrument()
 
     # 自动 log

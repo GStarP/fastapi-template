@@ -33,17 +33,16 @@ async def middleware_request_id(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(_, exc: Exception):
-    # log for each error
-    logger.error("Exception occurred", exc_info=True)
+    logger.exception("Exception occurred")
 
-    # handle business error
+    # 处理业务异常
     if isinstance(exc, error.BizError):
         return JSONResponse(
             status_code=200,
             content=rest.err_ret(code=exc.code, message=exc.message, data=exc.data),
         )
 
-    # hide detail for other error
+    # 隐藏异常详情
     message = "Internal server error"
     return JSONResponse(
         status_code=200,
@@ -59,9 +58,15 @@ api_router = APIRouter(prefix="/api")
 
 @api_router.get("/ping")
 async def r_ping():
-    # request_id, attr1, attr2 都会被记录为 log_record 属性
+    # * request_id, attr1, attr2 都会被记录为 log_record 属性
     logger.info("ping", extra={"attr1": 1, "attr2": "abc"})
     return rest.ok_ret("pong")
+
+
+@api_router.get("/err")
+async def r_err():
+    v = 1 / 0
+    return rest.ok_ret("err")
 
 
 api_router.include_router(router=user_router.router)

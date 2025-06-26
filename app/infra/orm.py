@@ -4,7 +4,6 @@ from tortoise.contrib.fastapi import register_tortoise
 from .settings import settings
 
 
-# TODO: ensure async engine
 # TODO: test concurrency
 # TODO: connection pool config
 def init_orm(app: FastAPI):
