@@ -1,40 +1,39 @@
-import logging
+from asyncio import sleep
+from uuid import uuid4
 
 from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from opentelemetry import trace
 
 from app.features.user import router as user_router
-from app.infra import log, observable, orm, request_id
-from app.infra.redis import redis, redis_prefix
+from app.infra import observable, orm
+from app.infra.log import LOGGER
+from app.infra.redis import REDIS, build_redis_key
 from app.shared import error, rest
 
 app = FastAPI()
 
-# Init Logging
-log.init_logging()
-logger = logging.getLogger(__name__)
-# Init Observable
 observable.init_observable(app)
-
-# Init ORM
 orm.init_orm(app)
 
+"""
+Middleware
+"""
 
-###
-# Middleware
-###
+
 @app.middleware("http")
 async def middleware_request_id(request: Request, call_next):
     client_request_id = request.headers.get("X-Request-ID")
-    rid = request_id.set_request_id(client_request_id)
+    request_id = client_request_id or uuid4().hex
+    observable.set_baggage("request_id", request_id)
     response: Response = await call_next(request)
-    response.headers["X-Request-ID"] = rid
+    response.headers["X-Request-ID"] = request_id
     return response
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(_, exc: Exception):
-    logger.exception("Exception occurred")
+    LOGGER.exception("Exception occurred")
 
     # 处理业务异常
     if isinstance(exc, error.BizError):
@@ -47,20 +46,24 @@ async def global_exception_handler(_, exc: Exception):
     message = "Internal server error"
     return JSONResponse(
         status_code=200,
-        content=rest.err_ret(message=message),
+        content=rest.err_ret(code=403, message=message),
     )
 
 
-###
-# API
-###
+"""
+API
+"""
 api_router = APIRouter(prefix="/api")
 
 
 @api_router.get("/ping")
 async def r_ping():
-    # * request_id, attr1, attr2 都会被记录为 log_record 属性
-    logger.info("ping", extra={"attr1": 1, "attr2": "abc"})
+    LOGGER.info("ping", extra={"action": "ping", "attr.int": 1})
+
+    tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span("sleep") as span:
+        await sleep(0.5)
+
     return rest.ok_ret("pong")
 
 
@@ -72,9 +75,10 @@ async def r_err():
 
 @api_router.get("/redis")
 async def r_redis():
-    v = await redis.incr(redis_prefix("count"))
+    v = await REDIS.incr(build_redis_key("count"))
     return rest.ok_ret(v)
 
 
+# 引入其它模块路由
 api_router.include_router(router=user_router.router)
 app.include_router(router=api_router)

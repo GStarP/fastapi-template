@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise
 
-from .settings import settings
+from .settings import SETTINGS
 
 
 # TODO: test concurrency
@@ -10,7 +10,7 @@ def init_orm(app: FastAPI):
     register_tortoise(
         app=app,
         config={
-            "connections": {"default": settings.DB_URL},
+            "connections": {"default": SETTINGS.DB_URL},
             "apps": {
                 "models": {
                     "models": ["app.features.user.models"],

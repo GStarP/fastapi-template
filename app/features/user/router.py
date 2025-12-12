@@ -21,15 +21,24 @@ async def r_update_user(user: UserUpdate):
         if user.name is None:
             return rest.err_ret("missing name")
         u = await models.User.create(name=user.name, password="123456")
-        return rest.ok_ret(u.__dict__)
-
-
-class UserVO(BaseModel):
-    id: str
-    name: str
+        return rest.ok_ret(
+            {
+                "id": str(u.id),
+                "name": u.name,
+                "password": u.password,
+            }
+        )
 
 
 @router.get("/")
 async def r_get_user():
     users = await models.User.all()
-    return rest.ok_ret([UserVO(id=str(u.id), name=u.name) for u in users])
+    return rest.ok_ret(
+        [
+            {
+                "id": str(u.id),
+                "name": u.name,
+            }
+            for u in users
+        ]
+    )

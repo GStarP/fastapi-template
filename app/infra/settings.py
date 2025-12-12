@@ -34,6 +34,6 @@ class Settings:
                 setattr(self, k.name, v)
 
 
-settings = Settings()
+SETTINGS = Settings()
 
-print(f"settings: {settings}")
+print(f"{SETTINGS.SERVICE_NAME}: settings loaded\n{SETTINGS}")
