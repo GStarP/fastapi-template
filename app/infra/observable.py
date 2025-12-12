@@ -1,8 +1,9 @@
 import logging
+import os
+import socket
 
 from fastapi import FastAPI
 from opentelemetry import _logs, baggage, context, metrics, trace
-from opentelemetry.context import Context
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
@@ -24,7 +25,17 @@ from .settings import SETTINGS
 
 
 def init_observable(app: FastAPI):
-    resource = Resource.create(attributes={"service.name": SETTINGS.SERVICE_NAME})
+    if SETTINGS.OTLP_URL == "":
+        print(f"{SETTINGS.SERVICE_NAME}: OTLP_URL is empty, skip init_observable")
+        return
+
+    resource = Resource.create(
+        attributes={
+            "service.name": SETTINGS.SERVICE_NAME,
+            "service.machine.hostname": socket.gethostname(),
+            "service.process.pid": str(os.getpid()),
+        }
+    )
 
     """
     Trace

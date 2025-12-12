@@ -5,6 +5,7 @@ from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from opentelemetry import trace
 
+from app.features.metrics.sleep import sleep_concurrency_metric, sleep_latency_metric
 from app.features.user import router as user_router
 from app.infra import observable, orm
 from app.infra.log import LOGGER
@@ -58,11 +59,19 @@ api_router = APIRouter(prefix="/api")
 
 @api_router.get("/ping")
 async def r_ping():
+    import random
+
     LOGGER.info("ping", extra={"action": "ping", "attr.int": 1})
 
     tracer = trace.get_tracer(__name__)
-    with tracer.start_as_current_span("sleep") as span:
-        await sleep(0.5)
+    sleep_concurrency_metric.add(1)
+    try:
+        with tracer.start_as_current_span("sleep"):
+            sleep_time = random.randint(5, 30)
+            await sleep(sleep_time)
+            sleep_latency_metric.record(sleep_time)
+    finally:
+        sleep_concurrency_metric.add(-1)
 
     return rest.ok_ret("pong")
 
